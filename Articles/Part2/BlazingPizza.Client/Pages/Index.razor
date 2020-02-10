@@ -1,0 +1,54 @@
+﻿@page "/"
+
+@inject HttpClient HttpClient
+
+@using BlazingPizza.ViewModels
+@using BlazingPizza.DomainModels
+
+<div class="main">
+    <ul class="pizza-cards">
+        @{
+            Console.WriteLine($"Time from markup block: {DateTime.Now.ToString()}:{DateTime.Now.Millisecond.ToString()}");
+        }
+        
+@if (_pizzaViewModels != null)
+{
+    @foreach (var pizza in _pizzaViewModels)
+    {
+        Console.WriteLine($"Time from cycle: {DateTime.Now.ToString()}:{DateTime.Now.Millisecond.ToString()}");
+         <li style="background-image: url('@pizza.ImageUrl')"> 
+            <div class="pizza-info">
+                <span class="title">@pizza.Name</span>
+                @pizza.Description
+                <span class="price">@pizza.GetFormattedBasePrice()</span>                    
+            </div>
+        </li>
+    }
+}
+
+        
+    </ul>
+</div>
+
+@code{
+
+    IEnumerable<BasePizzaViewModel> _pizzaViewModels;
+
+    protected async override Task OnInitializedAsync()
+    {
+        Console.WriteLine($"Time from code block, before await: {DateTime.Now.ToString()}:{DateTime.Now.Millisecond.ToString()}");
+        var queryResult = await HttpClient.GetJsonAsync<IEnumerable<BasePizza>>("pizzas");
+        Console.WriteLine($"Time from code block, after await: {DateTime.Now.ToString()}:{DateTime.Now.Millisecond.ToString()}");
+        
+        _pizzaViewModels = queryResult.Select(i => new BasePizzaViewModel()
+        {
+            BasePrice = i.BasePrice,
+            Description = i.Description,
+            Id = i.Id,
+            ImageUrl = i.ImageUrl,
+            Name = i.Name
+        });
+        
+        StateHasChanged();
+    }
+}
